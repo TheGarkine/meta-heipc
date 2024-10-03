@@ -1,21 +1,27 @@
-inherit python3native setuptools3
+inherit python3native
 
+# The package name in the yocto universe
 HEIPC_PYTHON_BITBAKE_PACKAGE_NAME = "${PN}-lib-python"
+# The actual python package name you can import later in python3 on the target
 HEIPC_PYTHON_PACKAGE_NAME = "${PN}_grpc_client"
 
+# We replace all "-" with "_" to be conform with python standards
 python () {
     d.setVar('HEIPC_PYTHON_PACKAGE_NAME', d.getVar('HEIPC_PYTHON_PACKAGE_NAME').replace("-", "_"))
 }
 
 PACKAGES += "${HEIPC_PYTHON_BITBAKE_PACKAGE_NAME}"
 
+# Temporary dirs
 HEIPC_PYTHON_PACKAGE_DIR = "${B}/heipc-python"
+## TODO (rkrauthann) find a better name
 HEIPC_PACKAGE_SUBDIR = "${HEIPC_PYTHON_PACKAGE_DIR}/${HEIPC_PYTHON_PACKAGE_NAME}"
 
 # Override the default Python package location
-SETUPTOOLS_SETUP_PATH = "${HEIPC_PYTHON_PACKAGE_DIR}"
+# inherit setuptools
+# SETUPTOOLS_SETUP_PATH = "${HEIPC_PYTHON_PACKAGE_DIR}"
 
-#Package the Python client library
+# Package the Python client library
 FILES:${HEIPC_PYTHON_BITBAKE_PACKAGE_NAME} = "${PYTHON_SITEPACKAGES_DIR}/${HEIPC_PYTHON_PACKAGE_NAME}*"
 DEPENDS += " python3-native python3-grpcio-tools-native python3-protobuf-native"
 RDEPENDS:${HEIPC_PYTHON_BITBAKE_PACKAGE_NAME} += "python3 python3-grpcio python3-protobuf"
@@ -61,8 +67,8 @@ EOF
 }
 
 do_compile:append() {
-    ${STAGING_BINDIR_NATIVE}/python3-native/python3 -m grpc_tools.protoc --proto_path=${S}/src \
-        --python_out=${HEIPC_PACKAGE_SUBDIR} --grpc_python_out=${HEIPC_PACKAGE_SUBDIR} ${S}/src/greeter.proto
+    ${STAGING_BINDIR_NATIVE}/python3-native/python3 -m grpc_tools.protoc --proto_path=${HEIPC_PROTO_PATH} \
+        --python_out=${HEIPC_PACKAGE_SUBDIR} --grpc_python_out=${HEIPC_PACKAGE_SUBDIR} ${HEIPC_PROTO_LOCATION}
 }
 
 # Installation steps for the C++ server and Python package
