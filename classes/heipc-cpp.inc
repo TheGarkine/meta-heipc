@@ -24,9 +24,6 @@ do_configure:append() {
 cmake_minimum_required(VERSION 3.10)
 project(${HEIPC_CPP_BITBAKE_PACKAGE_NAME})
 
-# Include directories for gRPC and Protobuf
-include_directories(${STAGING_INCDIR})
-
 # Library output path
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY \${CMAKE_BINARY_DIR})
 
@@ -73,11 +70,17 @@ do_compile:append() {
     cd ${HEIPC_CPP_PACKAGE_DIR}
 
     # Configure cmake with proper paths for installation (no DESTDIR here)
-    cmake . -DCMAKE_INSTALL_PREFIX=${prefix} \
+    cmake -B ${HEIPC_CPP_PACKAGE_DIR} -S ${HEIPC_CPP_PACKAGE_DIR} \
+            -DCMAKE_INSTALL_PREFIX=${prefix} \
             -DCMAKE_INSTALL_LIBDIR=${libdir} \
-            -DCMAKE_INSTALL_INCLUDEDIR=${includedir}
+            -DCMAKE_INSTALL_INCLUDEDIR=${includedir} \
+            -DCMAKE_INSTALL_SO_NO_EXE=0 \
+            -DCMAKE_TOOLCHAIN_FILE=${WORKDIR}/toolchain.cmake \
+            -DCMAKE_VERBOSE_MAKEFILE=1 \
+            ${EXTRA_OECMAKE} \
+            -Wno-dev
 
-    make
+    oe_runmake -C ${HEIPC_CPP_PACKAGE_DIR}
 }
 
 do_install:append() {
